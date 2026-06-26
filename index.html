@@ -1,1 +1,551 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YOMITV - Watch Anime</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --bg-color: #0b0a0f;
+            --card-bg: #13121a;
+            --accent-purple: #6d28d9;
+            --accent-purple-hover: #5b21b6;
+            --text-main: #ffffff;
+            --text-muted: #8e8c99;
+            --text-gray: #4b4952;
+        }
 
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+            line-height: 1.5;
+        }
+
+        a { color: inherit; text-decoration: none; }
+
+        /* --- HEADER --- */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 4%;
+            background: linear-gradient(to bottom, rgba(11,10,15,0.9), transparent);
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: 900;
+            color: #a855f7;
+            letter-spacing: 1px;
+            cursor: pointer;
+        }
+
+        nav ul { display: flex; list-style: none; gap: 30px; }
+        nav ul li a {
+            color: var(--text-muted);
+            font-weight: 500;
+            transition: color 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        nav ul li a.active, nav ul li a:hover { color: var(--text-main); }
+
+        .header-actions { display: flex; align-items: center; gap: 20px; color: var(--text-muted); font-size: 18px; }
+        .profile-avatar {
+            width: 35px; height: 35px; background: var(--accent-purple);
+            border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 14px;
+        }
+
+        /* --- СКРЫТЫЙ ПОИСК --- */
+        .search-container {
+            display: flex;
+            align-items: center;
+            position: relative;
+            background: transparent;
+            border: 1px solid transparent;
+            padding: 4px 8px;
+            border-radius: 4px;
+            transition: all 0.4s ease;
+        }
+
+        .search-container.active {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .search-container i { cursor: pointer; transition: color 0.3s; }
+        .search-container i:hover { color: var(--text-main); }
+
+        .search-input {
+            width: 0;
+            background: transparent;
+            border: none;
+            outline: none;
+            color: white;
+            font-family: inherit;
+            font-size: 14px;
+            transition: width 0.4s ease;
+            padding-left: 0;
+        }
+
+        .search-container.active .search-input {
+            width: 180px;
+            padding-left: 8px;
+        }
+
+        /* --- СТРАНИЦЫ --- */
+        .page { display: none; padding-top: 80px; }
+        .page.active { display: block; }
+
+        /* --- HERO BANNER --- */
+        .hero {
+            position: relative;
+            height: 65vh;
+            min-height: 450px;
+            background: linear-gradient(to right, rgba(11,10,15,0.95) 30%, rgba(11,10,15,0.4) 60%, rgba(11,10,15,0.9)), 
+                        url('https://images.unsplash.com/photo-1579546929518-9e396f3cc809?q=80&w=2070') no-repeat center center/cover;
+            display: flex;
+            align-items: center;
+            padding: 0 4%;
+        }
+
+        .hero-content { max-width: 550px; }
+        .meta-info { display: flex; align-items: center; gap: 12px; font-size: 13px; color: var(--text-muted); margin-bottom: 15px; }
+        .rating { color: #fbbf24; font-weight: 700; display: flex; align-items: center; gap: 4px; }
+        .hero h1 { font-size: 42px; font-weight: 900; line-height: 1.1; margin-bottom: 10px; }
+        .season-title { color: #a855f7; font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 20px; }
+        .description { color: var(--text-muted); font-size: 14px; line-height: 1.6; margin-bottom: 30px; }
+        
+        .hero-buttons { display: flex; gap: 15px; align-items: center; }
+        .btn-purple {
+            background-color: var(--accent-purple); color: white; padding: 12px 28px;
+            border-radius: 6px; font-weight: 600; border: none; cursor: pointer;
+            display: flex; align-items: center; gap: 10px; transition: background 0.2s;
+        }
+        .btn-purple:hover { background-color: var(--accent-purple-hover); }
+
+        .trending-badge {
+            position: absolute; bottom: 40px; right: 4%; background-color: rgba(255, 255, 255, 0.05);
+            padding: 10px 20px; border-radius: 6px; font-size: 12px; font-weight: 600; border-left: 3px solid #f97316;
+        }
+
+        /* --- СЕКЦИИ И КАРТОЧКИ --- */
+        section { padding: 25px 4%; }
+        .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .section-title-main { font-size: 20px; font-weight: 700; display: flex; align-items: center; gap: 10px; }
+        .section-title-main i { color: #a855f7; }
+
+        .horizontal-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
+        
+        .anime-card {
+            background: var(--card-bg); border-radius: 8px; overflow: hidden;
+            position: relative; cursor: pointer; transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .anime-card:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.5); }
+
+        .thumbnail-wrapper { position: relative; aspect-ratio: 16/9; background: #25242d; }
+        .thumbnail-wrapper img { width: 100%; height: 100%; object-fit: cover; }
+        
+        .card-badge {
+            position: absolute; top: 10px; left: 10px; font-size: 10px; font-weight: 700;
+            padding: 3px 8px; border-radius: 4px; text-transform: uppercase; background: rgba(0,0,0,0.7);
+        }
+        .badge-new { color: #00f5ff; }
+        .badge-completed { color: #a855f7; }
+
+        .progress-bar-container { position: absolute; bottom: 0; left: 0; width: 100%; height: 4px; background: rgba(255,255,255,0.2); }
+        .progress-fill { height: 100%; background: var(--accent-purple); }
+        .card-info { padding: 12px; }
+        .card-title { font-size: 14px; font-weight: 600; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .card-subtext { font-size: 12px; color: var(--text-muted); }
+
+        /* ТАБЫ ЖАНРОВ */
+        .genre-tabs { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 10px; margin-bottom: 25px; }
+        .tab {
+            background: rgba(255,255,255,0.05); padding: 6px 16px; border-radius: 20px;
+            font-size: 12px; font-weight: 600; color: var(--text-muted); border: none; cursor: pointer; text-transform: uppercase;
+        }
+        .tab.active { background: var(--accent-purple); color: white; }
+
+        .vertical-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 20px; }
+        .poster-wrapper { position: relative; aspect-ratio: 2/3; border-radius: 8px; overflow: hidden; background: #25242d; margin-bottom: 10px; }
+        .poster-wrapper img { width: 100%; height: 100%; object-fit: cover; }
+        .card-meta-bottom { display: flex; gap: 10px; font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+
+        /* --- СТРАНИЦА ДЕТАЛЕЙ АНИМЕ --- */
+        .anime-details-container { padding: 40px 4%; display: grid; grid-template-columns: 300px 1fr; gap: 40px; }
+        .details-poster { width: 100%; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.7); }
+        .details-poster img { width: 100%; display: block; }
+        .btn-back { margin-bottom: 20px; display: inline-flex; align-items: center; gap: 10px; color: var(--text-muted); cursor: pointer; font-weight: 600; }
+        .btn-back:hover { color: white; }
+        
+        .episodes-section { margin-top: 40px; }
+        .episode-row {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 15px; background: var(--card-bg); margin-bottom: 10px; border-radius: 6px; cursor: pointer;
+        }
+        .episode-row:hover { background: rgba(255,255,255,0.05); }
+
+        .no-results {
+            display: none; text-align: center; padding: 40px; color: var(--text-muted);
+            font-size: 16px; grid-column: 1 / -1;
+        }
+
+        /* --- FOOTER --- */
+        footer { background: #07060a; padding: 40px 4%; border-top: 1px solid rgba(255,255,255,0.05); margin-top: 50px; }
+        .footer-top { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 30px; margin-bottom: 30px; }
+        .footer-brand p { font-size: 13px; color: var(--text-muted); margin-top: 5px; }
+        .footer-links { display: flex; gap: 30px; }
+        .footer-links a { font-size: 14px; color: var(--text-muted); }
+        .footer-links a:hover { color: white; }
+        .footer-bottom { font-size: 11px; color: var(--text-gray); }
+
+        @media (max-width: 768px) {
+            nav { display: none; }
+            .hero h1 { font-size: 32px; }
+            .anime-details-container { grid-template-columns: 1fr; }
+            .trending-badge { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ШАПКА -->
+    <header>
+        <div style="display: flex; align-items: center; gap: 40px;">
+            <div class="logo" onclick="showPage('main-page')">YOMITV</div>
+            <nav>
+                <ul>
+                    <li><a href="#" class="active" onclick="showPage('main-page')"><i class="fa-solid fa-house"></i> Browse</a></li>
+                    <li><a href="#"><i class="fa-solid fa-list"></i> My List</a></li>
+                    <li><a href="#"><i class="fa-solid fa-chart-line"></i> Top Rated</a></li>
+                </ul>
+            </nav>
+        </div>
+        <div class="header-actions">
+            <!-- Скрытый поиск -->
+            <div class="search-container" id="searchContainer">
+                <i class="fa-solid fa-magnifying-glass" id="searchIcon"></i>
+                <input type="text" class="search-input" id="searchInput" placeholder="Поиск аниме...">
+            </div>
+            <i class="fa-solid fa-bell"></i>
+            <div class="profile-avatar"><i class="fa-solid fa-user"></i></div>
+        </div>
+    </header>
+
+    <!-- ================= ГЛАВНАЯ СТРАНИЦА ================= -->
+    <div id="main-page" class="page active">
+        <!-- БАННЕР (Клик на баннер открывает Клинок) -->
+        <section class="hero" id="heroBanner" onclick="openAnime('Demon Slayer', 'https://images.unsplash.com/photo-1579546929518-9e396f3cc809?q=80&w=600', '9.2', 'Сезон 4 • Тренировка Столпов. Танджиро отправляется к могущественным воинам, чтобы подготовиться к финальной битве против Мудзана Кибуцудзи.')">
+            <div class="hero-content">
+                <div class="meta-info">
+                    <span class="rating"><i class="fa-solid fa-star"></i> 9.2</span>
+                    <span>•</span> <span>2024</span> <span>•</span> <span>11 Эпизодов</span>
+                </div>
+                <h1>Demon Slayer:<br>Kimetsu no Yaiba</h1>
+                <div class="season-title">Season 4 • Hashira Training Arc</div>
+                <p class="description">
+                    Танджиро и его товарищи проходят суровые тренировки под руководством Столпов — величайших мастеров истребления демонов, готовясь к решающей схватке.
+                </p>
+                <div class="hero-buttons">
+                    <button class="btn-purple"><i class="fa-solid fa-info-circle"></i> Подробнее</button>
+                </div>
+            </div>
+            <div class="trending-badge">
+                <i class="fa-solid fa-fire" style="color: #f97316; margin-right: 5px;"></i> #1 В ЯПОНИИ СЕГОДНЯ
+            </div>
+        </section>
+
+        <!-- CONTINUE WATCHING -->
+        <section id="continueSection">
+            <div class="section-header">
+                <div class="section-title-main"><i class="fa-regular fa-clock"></i> Продолжить просмотр</div>
+            </div>
+            <div class="horizontal-grid">
+                <div class="anime-card" onclick="openAnime('Frieren: Beyond Journey\'s End', 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?q=80&w=600', '9.4', 'История о эльфийке Маге Фрирен и её путешествии после завершения великого похода против Короля Демонов.')">
+                    <div class="thumbnail-wrapper">
+                        <img src="https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?q=80&w=600" alt="">
+                        <span class="card-badge badge-completed">Завершено</span>
+                        <div class="progress-bar-container"><div class="progress-fill" style="width: 100%;"></div></div>
+                    </div>
+                    <div class="card-info">
+                        <div class="card-title">Frieren: Beyond Journey's End</div>
+                        <div class="card-subtext">Эпизод 1 • Конец пути</div>
+                    </div>
+                </div>
+
+                <div class="anime-card" onclick="openAnime('Solo Leveling', 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?q=80&w=600', '8.7', 'В мире, где открываются врата в подземелья, слабейший охотник человечества Сон Джин-ву получает уникальную систему прокачки.')">
+                    <div class="thumbnail-wrapper">
+                        <img src="https://images.unsplash.com/photo-1506744038136-46273834b3fb?q=80&w=600" alt="">
+                        <span class="card-badge badge-new">Новое</span>
+                        <div class="progress-bar-container"><div class="progress-fill" style="width: 40%;"></div></div>
+                    </div>
+                    <div class="card-info">
+                        <div class="card-title">Solo Leveling</div>
+                        <div class="card-subtext">Эпизод 1 • Я привык</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- POPULAR NOW -->
+        <section>
+            <div class="section-header">
+                <div class="section-title-main"><i class="fa-solid fa-bolt"></i> Популярно сейчас</div>
+            </div>
+            <div class="genre-tabs" id="genreTabs">
+                <button class="tab active" onclick="filterGenre(button)">Все</button>
+                <button class="tab" onclick="filterGenre(button)">Экшен</button>
+                <button class="tab" onclick="filterGenre(button)">Фэнтези</button>
+            </div>
+
+            <!-- Сетка популярных аниме (15 штук) -->
+            <div class="vertical-grid" id="popularGrid">
+                <div class="no-results" id="noResultsMessage">Ничего не найдено по вашему запросу :(</div>
+
+                <!-- 1 -->
+                <div class="anime-card" onclick="openAnime('Jujutsu Kaisen', 'https://images.unsplash.com/photo-1518156677180-95a2893f3e9f?q=80&w=400', '8.9', 'Магическая битва. Юдзи Итадори ради спасения друзей поглощает проклятый палец Двуликого Сукуны.')">
+                    <div class="poster-wrapper"><img src="https://images.unsplash.com/photo-1518156677180-95a2893f3e9f?q=80&w=400" alt=""></div>
+                    <div class="card-title">Jujutsu Kaisen</div>
+                    <div class="card-meta-bottom"><span style="color:#fbbf24;"><i class="fa-solid fa-star"></i> 8.9</span><span>23 сер.</span></div>
+                </div>
+                <!-- 2 -->
+                <div class="anime-card" onclick="openAnime('Chainsaw Man', 'https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?q=80&w=400', '8.8', 'Человек-бензопила. Дэндзи заключает контракт с демоном-собакой Почитой и становится охотником на демонов.')">
+                    <div class="poster-wrapper"><img src="https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?q=80&w=400" alt=""></div>
+                    <div class="card-title">Chainsaw Man</div>
+                    <div class="card-meta-bottom"><span style="color:#fbbf24;"><i class="fa-solid fa-star"></i> 8.8</span><span>12 сер.</span></div>
+                </div>
+                <!-- 3 -->
+                <div class="anime-card" onclick="openAnime('Demon Slayer', 'https://images.unsplash.com/photo-1534447677768-be436bb09401?q=80&w=400', '9.2', 'Истребитель демонов. Клинок, рассекающий демонов.')">
+                    <div class="poster-wrapper"><img src="https://images.unsplash.com/photo-1534447677768-be436bb09401?q=80&w=400" alt=""></div>
+                    <div class="card-title">Demon Slayer</div>
+                    <div class="card-meta-bottom"><span style="color:#fbbf24;"><i class="fa-solid fa-star"></i> 9.2</span><span>11 сер.</span></div>
+                </div>
+                <!-- 4 -->
+                <div class="anime-card" onclick="openAnime('Attack on Titan', 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=400', '9.1', 'Атака титанов. Человечество забаррикадировалось за гигантскими стенами от плотоядных гигантов.')">
+                    <div class="poster-wrapper"><img src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=400" alt=""></div>
+                    <div class="card-title">Attack on Titan</div>
+                    <div class="card-meta-bottom"><span style="color:#fbbf24;"><i class="fa-solid fa-star"></i> 9.1</span><span>87 сер.</span></div>
+                </div>
+                <!-- 5 -->
+                <div class="anime-card" onclick="openAnime('One Piece', 'https://images.unsplash.com/photo-1557672172-298e090bd0f1?q=80&w=400', '8.9', 'Ван Пис. Пират Манки Д. Луффи собирает команду, чтобы найти легендарное сокровище Гол Д. Роджера.')">
+                    <div class="poster-wrapper"><img src="https://images.unsplash.com/photo-1557672172-298e090bd0f1?q=80&w=400" alt=""></div>
+                    <div class="card-title">One Piece</div>
+                    <div class="card-meta-bottom"><span style="color:#fbbf24;"><i class="fa-solid fa-star"></i> 8.9</span><span>1000+ сер.</span></div>
+                </div>
+                <!-- 6 -->
+                <div class="anime-card" onclick="openAnime('Naruto Shippuden', 'https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?q=80&w=400', '8.6', 'Наруто: Ураганные хроники. Повзрослевший Наруто Узумаки возвращается в Деревню Скрытой Листвы после тренировок.')">
+                    <div class="poster-wrapper"><img src="https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?q=80&w=400" alt=""></div>
+                    <div class="card-title">Naruto Shippuden</div>
+                    <div class="card-meta-bottom"><span style="color:#fbbf24;"><i class="fa-solid fa-star"></i> 8.6</span><span>500 сер.</span></div>
+                </div>
+                <!-- 7 -->
+                <div class="anime-card" onclick="openAnime('Bleach: Thousand-Year Blood War', 'https://images.unsplash.com/photo-1563089145-599997674d42?q=80&w=400', '9.0', 'Блич: Тысячелетняя кровавая война. Столкновение проводников душ и выживших Квинси во главе с Яхве.')">
+                    <div class="poster-wrapper"><img src="https://images.unsplash.com/photo-1563089145-599997674d42?q=80&w=400" alt=""></div>
+                    <div class="card-title">Bleach: TYBW</div>
+                    <div class="card-meta-bottom"><span style="color:#fbbf24;"><i class="fa-solid fa-star"></i> 9.0</span><span>26 сер.</span></div>
+                </div>
+                <!-- 8 -->
+                <div class="anime-card" onclick="openAnime('My Hero Academia', 'https://images.unsplash.com/photo-1536240478700-b869070f9279?q=80&w=400', '8.4', 'Моя геройская академия. История Идзуку Мидории в мире, где у 80% населения есть суперспособности.')">
+                    <div class="poster-wrapper"><img src="https://images.unsplash.com/photo-1536240478700-b869070f9279?q=80&w=400" alt=""></div>
+                    <div class="card-title">My Hero Academia</div>
+                    <div class="card-meta-bottom"><span style="color:#fbbf24;"><i class="fa-solid fa-star"></i> 8.4</span><span>138 сер.</span></div>
+                </div>
+                <!-- 9 -->
+                <div class="anime-card" onclick="openAnime('Death Note', 'https://images.unsplash.com/photo-1516550893923-42d28e5677af?q=80&w=400', '9.0', 'Тетрадь смерти. Студент Лайт Ягами находит тетрадь бога смерти, способную убить любого, чье имя в нее записано.')">
+                    <div class="poster-wrapper"><img src="https://images.unsplash.com/photo-1516550893923-42d28e5677af?q=80&w=400" alt=""></div>
+                    <div class="card-title">Death Note</div>
+                    <div class="card-meta-bottom"><span style="color:#fbbf24;"><i class="fa-solid fa-star"></i> 9.0</span><span>37 сер.</span></div>
+                </div>
+                <!-- 10 -->
+                <div class="anime-card" onclick="openAnime('Hunter x Hunter', 'https://images.unsplash.com/photo-1541701494587-cb58502866ab?q=80&w=400', '9.1', 'Охотник х Охотник. Гон Фрикс отправляется на опасный экзамен, чтобы стать лицензированным Охотником.')">
+                    <div class="poster-wrapper"><img src="https://images.unsplash.com/photo-1541701494587-cb58502866ab?q=80&w=400" alt=""></div>
+                    <div class="card-title">Hunter x Hunter</div>
+                    <div class="card-meta-bottom"><span style="color:#fbbf24;"><i class="fa-solid fa-star"></i> 9.1</span><span>148 сер.</span></div>
+                </div>
+                <!-- 11 -->
+                <div class="anime-card" onclick="openAnime('Cyberpunk: Edgerunners', 'https://images.unsplash.com/photo-1550684848-fac1c5b4e853?q=80&w=400', '8.6', 'Киберпанк: Бегущие по краю. История уличного парня Дэвида Мартинеса в опасном мегаполисе будущего Найт-Сити.')">
+                    <div class="poster-wrapper"><img src="https://images.unsplash.com/photo-1550684848-fac1c5b4e853?q=80&w=400" alt=""></div>
+                    <div class="card-title">Cyberpunk: Edgerunners</div>
+                    <div class="card-meta-bottom"><span style="color:#fbbf24;"><i class="fa-solid fa-star"></i> 8.6</span><span>10 сер.</span></div>
+                </div>
+                <!-- 12 -->
+                <div class="anime-card" onclick="openAnime('Tokyo Ghoul', 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=400', '7.8', 'Токийский гуль. Обычный студент Кэн Канэки после несчастного случая становится наполовину человеком, наполовину гулем.')">
+                    <div class="poster-wrapper"><img src="https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=400" alt=""></div>
+                    <div class="card-title">Tokyo Ghoul</div>
+                    <div class="card-meta-bottom"><span style="color:#fbbf24;"><i class="fa-solid fa-star"></i> 7.8</span><span>12 сер.</span></div>
+                </div>
+                <!-- 13 -->
+                <div class="anime-card" onclick="openAnime('Fullmetal Alchemist: Brotherhood', 'https://images.unsplash.com/photo-1614850523459-c2f4c699c52e?q=80&w=400', '9.2', 'Стальной алхимик: Братство. Братья Элрики ищут философский камень, чтобы вернуть свои утраченные тела.')">
+                    <div class="poster-wrapper"><img src="https://images.unsplash.com/photo-1614850523459-c2f4c699c52e?q=80&w=400" alt=""></div>
+                    <div class="card-title">Fullmetal Alchemist</div>
+                    <div class="card-meta-bottom"><span style="color:#fbbf24;"><i class="fa-solid fa-star"></i> 9.2</span><span>64 сер.</span></div>
+                </div>
+                <!-- 14 -->
+                <div class="anime-card" onclick="openAnime('Vinland Saga', 'https://images.unsplash.com/photo-1533105079780-92b9be482077?q=80&w=400', '8.9', 'Сага о Винланде. Юный Торфинн жаждет отомстить за смерть своего отца великому воину Аскеладду.')">
+                    <div class="poster-wrapper"><img src="https://images.unsplash.com/photo-1533105079780-92b9be482077?q=80&w=400" alt=""></div>
+                    <div class="card-title">Vinland Saga</div>
+                    <div class="card-meta-bottom"><span style="color:#fbbf24;"><i class="fa-solid fa-star"></i> 8.9</span><span>24 сер.</span></div>
+                </div>
+                <!-- 15 -->
+                <div class="anime-card" onclick="openAnime('Monster', 'https://images.unsplash.com/photo-1509248961158-e54f6934749c?q=80&w=400', '8.7', 'Монстр. Гениальный нейрохирург Кэндзо Тэнма спасает жизнь маленькому мальчику, который вырастает в психопата.')">
+                    <div class="poster-wrapper"><img src="https://images.unsplash.com/photo-1509248961158-e54f6934749c?q=80&w=400" alt=""></div>
+                    <div class="card-title">Monster</div>
+                    <div class="card-meta-bottom"><span style="color:#fbbf24;"><i class="fa-solid fa-star"></i> 8.7</span><span>74 сер.</span></div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- ================= СТРАНИЦА АНИМЕ ================= -->
+    <div id="details-page" class="page">
+        <section>
+            <div class="btn-back" onclick="showPage('main-page')">
+                <i class="fa-solid fa-arrow-left"></i> Назад на главную
+            </div>
+            
+            <div class="anime-details-container">
+                <div class="details-poster">
+                    <img id="anime-img" src="" alt="Постер">
+                </div>
+                <div>
+                    <h1 id="anime-title" style="font-size: 36px; margin-bottom: 10px;">Название Аниме</h1>
+                    <div class="meta-info" style="margin-bottom: 20px;">
+                        <span class="rating" id="anime-rating"><i class="fa-solid fa-star"></i> 0.0</span>
+                        <span>•</span> <span>ТВ-сериал</span>
+                    </div>
+                    <p id="anime-desc" style="color: var(--text-muted); font-size: 16px; margin-bottom: 30px; line-height: 1.6;">
+                        Описание...
+                    </p>
+
+                    <div class="episodes-section">
+                        <h3 style="margin-bottom: 15px;"><i class="fa-solid fa-layer-group"></i> Список серий</h3>
+                        <div class="episode-row">
+                            <span>Серия 1 — Старт приключения</span>
+                            <span style="color: var(--text-muted); font-size: 13px;"><i class="fa-solid fa-eye"></i> Смотреть</span>
+                        </div>
+                        <div class="episode-row">
+                            <span>Серия 2 — Обострение интриги</span>
+                            <span style="color: #a855f7; font-size: 13px;"><i class="fa-solid fa-circle-play"></i> Смотреть</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- ПОДВАЛ -->
+    <footer>
+        <div class="footer-top">
+            <div class="footer-brand">
+                <div class="logo">YOMITV</div>
+                <p>Watch anime. No ads. No limits.</p>
+            </div>
+            <div class="footer-links">
+                <a href="#">О нас</a> <a href="#">Помощь</a> <a href="#">Конфиденциальность</a>
+            </div>
+        </div>
+        <div class="footer-bottom">&copy; 2026 YomiTV. Поиск по 15 тайтлам готов.</div>
+    </footer>
+
+    <!-- СКРИПТЫ -->
+    <script>
+        const searchContainer = document.getElementById('searchContainer');
+        const searchInput = document.getElementById('searchInput');
+        const searchIcon = document.getElementById('searchIcon');
+        
+        // Появление/Скрытие поиска
+        searchIcon.addEventListener('click', (e) => {
+            e.stopPropagation();
+            searchContainer.classList.toggle('active');
+            if (searchContainer.classList.contains('active')) {
+                searchInput.focus();
+            }
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!searchContainer.contains(e.target) && searchInput.value.trim() === "") {
+                searchContainer.classList.remove('active');
+            }
+        });
+
+        // Живой поиск
+        searchInput.addEventListener('input', function() {
+            const query = this.value.toLowerCase().trim();
+            const cards = document.querySelectorAll('.vertical-grid .anime-card, .horizontal-grid .anime-card');
+            const heroBanner = document.getElementById('heroBanner');
+            const continueSection = document.getElementById('continueSection');
+            const genreTabs = document.getElementById('genreTabs');
+            const noResults = document.getElementById('noResultsMessage');
+            
+            let hasResults = false;
+
+            if (query.length > 0) {
+                heroBanner.style.display = 'none';
+                continueSection.style.display = 'none';
+                genreTabs.style.display = 'none';
+            } else {
+                heroBanner.style.display = 'flex';
+                continueSection.style.display = 'block';
+                genreTabs.style.display = 'flex';
+            }
+
+            cards.forEach(card => {
+                const titleElement = card.querySelector('.card-title');
+                if (titleElement) {
+                    const titleText = titleElement.innerText.toLowerCase();
+                    if (titleText.includes(query)) {
+                        card.style.display = 'block';
+                        hasResults = true;
+                    } else {
+                        card.style.display = 'none';
+                    }
+                }
+            });
+
+            if (!hasResults && query.length > 0) {
+                noResults.style.display = 'block';
+            } else {
+                noResults.style.display = 'none';
+            }
+        });
+
+        function showPage(pageId) {
+            document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
+            document.getElementById(pageId).classList.add('active');
+            window.scrollTo(0, 0);
+        }
+
+        function openAnime(title, imgUrl, rating, description) {
+            document.getElementById('anime-title').innerText = title;
+            document.getElementById('anime-img').src = imgUrl;
+            document.getElementById('anime-rating').innerHTML = `<i class="fa-solid fa-star"></i> ${rating}`;
+            document.getElementById('anime-desc').innerText = description;
+            showPage('details-page');
+        }
+
+        function filterGenre(button) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            button.classList.add('active');
+        }
+    </script>
+</body>
+</html>
